@@ -67,27 +67,22 @@ void remove_dirs(char *dirname){
 
 int main( int argc, char *argv[ ]){
     strcpy(DIRECTORY_NAME, argv[1]);
-    char cp[255] = "cp -ax ";
-    char destino_dir_name[255];
-    strcat(cp, DIRECTORY_NAME);
-    strcat(destino_dir_name, DIRECTORY_NAME);
-    strcat(destino_dir_name, ".bz2");
-    strcat(cp, " ");
-    strcat(cp, destino_dir_name);
-    terminal = popen(cp, "r");
-    char path[PATH_MAX];
-    while(fgets(path, PATH_MAX, terminal) != NULL);
-    find_files(destino_dir_name);
-    char tar[255] = "tar cf ";
     char destino_tar_name[255];
+    char destino_temp_name[255];
     strcpy(destino_tar_name, DIRECTORY_NAME);
+    strcpy(destino_temp_name, DIRECTORY_NAME);
     strcat(destino_tar_name, ".bz2.tar");
+    strcat(destino_temp_name, ".bz2");
+    rename(DIRECTORY_NAME, destino_temp_name);
+    find_files(destino_temp_name);
+    char tar[255] = "tar cf ";
     strcat(tar, destino_tar_name);
     strcat(tar, " ");
-    strcat(tar, destino_dir_name);
-    //printf("%s\n", tar);
+    strcat(tar, destino_temp_name);
+    printf("%s\n", tar);
     terminal = popen(tar, "r");
+    char *path;
     while(fgets(path, PATH_MAX, terminal) != NULL);
-    remove_dirs(destino_dir_name);
+    remove_dirs(destino_temp_name);
     return 0;
 }
