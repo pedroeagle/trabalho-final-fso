@@ -6,7 +6,8 @@
 #define PATH_MAX 4096
 char DIRECTORIES[1000000][200];
 long long int DIR_POS = 0;
-char DIRECTORY_NAME[200];
+char DIRECTORY_NAME[1000000];
+char ZIP_NAME[1000000];
 FILE *terminal;
 
 void find_files(char *dirname){
@@ -67,22 +68,22 @@ void remove_dirs(char *dirname){
 
 int main( int argc, char *argv[ ]){
     strcpy(DIRECTORY_NAME, argv[1]);
+    strcpy(ZIP_NAME, argv[2]);
+    int size = strlen(ZIP_NAME);
+    ZIP_NAME[size-4] = '\0';
     char destino_tar_name[255];
-    char destino_temp_name[255];
-    strcpy(destino_tar_name, DIRECTORY_NAME);
-    strcpy(destino_temp_name, DIRECTORY_NAME);
-    strcat(destino_tar_name, ".bz2.tar");
-    strcat(destino_temp_name, ".bz2");
-    rename(DIRECTORY_NAME, destino_temp_name);
-    find_files(destino_temp_name);
+    strcpy(destino_tar_name, ZIP_NAME); //destino, já removemos o .tar
+    strcat(destino_tar_name, ".bz2.tar"); //nome final do arquivo
+    strcat(ZIP_NAME, ".bz2");
+    find_files(DIRECTORY_NAME);
     char tar[255] = "tar cf ";
     strcat(tar, destino_tar_name);
     strcat(tar, " ");
-    strcat(tar, destino_temp_name);
+    strcat(tar, DIRECTORY_NAME);
     printf("%s\n", tar);
     terminal = popen(tar, "r");
     char *path;
     while(fgets(path, PATH_MAX, terminal) != NULL);
-    remove_dirs(destino_temp_name);
+    remove_dirs(DIRECTORY_NAME);
     return 0;
 }
