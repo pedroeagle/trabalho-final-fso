@@ -40,6 +40,31 @@ void find_files(char *dirname){
     closedir(dir);
 }
 
+void remove_dirs(char *dirname){
+    DIR *dir;
+    struct dirent *dirp;
+    dir=opendir(dirname);
+    chdir(dirname);
+    
+    while((dirp=readdir(dir))!=NULL){
+        
+        if(dirp->d_type==4){
+            if(strcmp(dirp->d_name, ".")==0 || strcmp(dirp->d_name, "..")==0){
+                continue;
+            }
+            remove_dirs(dirp->d_name);
+        }
+        else{
+            remove(dirp->d_name);
+        }
+        strcpy(DIRECTORIES[DIR_POS], dirp->d_name);
+        DIR_POS++;
+    }
+    chdir("..");
+    closedir(dir);
+    rmdir(dirname);
+}
+
 int main( int argc, char *argv[ ]){
     strcpy(DIRECTORY_NAME, argv[1]);
     char cp[255] = "cp -ax ";
@@ -63,9 +88,6 @@ int main( int argc, char *argv[ ]){
     //printf("%s\n", tar);
     terminal = popen(tar, "r");
     while(fgets(path, PATH_MAX, terminal) != NULL);
-    char rm[255] = "rm -r ";
-    strcat(rm, destino_dir_name);
-    terminal = popen(rm, "r");
-    while(fgets(path, PATH_MAX, terminal) != NULL);
+    remove_dirs(destino_dir_name);
     return 0;
 }
