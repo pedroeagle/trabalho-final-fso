@@ -3,6 +3,8 @@
 #include <sys/dir.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #define PATH_MAX 4096
 char DIRECTORIES[1000000][200];
@@ -21,21 +23,6 @@ typedef struct Path{
 
 Path *FIRST_PATH;
 Path *LAST_PATH;
-void Insert(struct Path *path, struct Path *next){
-    Path *temp = path;
-    while(temp->next){
-        temp = temp->next;
-    }
-    temp->next = next;
-    next->prev = temp;
-    next->next = NULL;
-    printf("this: %s and next: %s\n", temp->dir, next->dir);
-}
-//utilize apenas para remover o último
-void Remove(struct Path *path){
-    LAST_PATH = &path->prev;
-    LAST_PATH->next = NULL;
-}
 
 char * GetPath(struct Path *first){
     char *path = malloc(1000000);
@@ -60,6 +47,25 @@ char * GetRPath(struct Path *file){
     return path;
 }
 
+void Insert(struct Path *path, struct Path *next){
+    Path *temp = path;
+    while(temp->next){
+        temp = temp->next;
+    }
+    temp->next = next;
+    next->prev = temp;
+    next->next = NULL;
+}
+
+//utilize apenas para remover o último
+void Remove(struct Path *path){
+    while(path->next){
+        path = path->next;
+    }
+    LAST_PATH = path->prev;
+    LAST_PATH->next = NULL;
+}
+
 typedef struct Files{
     Path path;
 }Files;
@@ -76,7 +82,6 @@ void copy_files(char *dirname, Files *files){
     
     while((dirp=readdir(dir))!=NULL){
         Path p;
-        printf("current: %s\n", GetPath(&current));
         p.dir = malloc(sizeof(dirp->d_name));
         if(dirp->d_type==4){
             if(strcmp(dirp->d_name, ".")==0 || strcmp(dirp->d_name, "..")==0){
@@ -85,6 +90,8 @@ void copy_files(char *dirname, Files *files){
             printf("%s %s\n", "FOLDER", dirp->d_name);
             strcpy(p.dir, dirp->d_name);
             Insert(&current, &p);
+            LAST_PATH = &p;
+            printf("current: %s\n", GetPath(&current));
             copy_files(dirp->d_name, files);
         }
         else{
@@ -95,7 +102,6 @@ void copy_files(char *dirname, Files *files){
             files[i-1].path.prev = current.prev;*/
             //memcpy(&files[i-1].path, &current, sizeof(current));
             files[i-1].path = current;
-            printf("%s\n", GetPath(&files[i-1].path));
             Insert(&files[i-1].path, &p);
             printf("adress: %s\n", GetPath(&files[i-1].path));
             i++;
@@ -176,8 +182,12 @@ void remove_dirs(char *dirname){
     closedir(dir);
     rmdir(dirname);
 }
-
+struct stat st = {0};
 int main( int argc, char *argv[ ]){
+    printf("%d\n", mkdir("/love/love", 7777));
+    if(stat("/love/love", &st) == -1){
+        mkdir("/love/love", 7777);
+    }
     strcpy(DIRECTORY_NAME, argv[1]); //Caminho atual
     strcpy(ZIP_NAME, argv[2]); //Nome do arquivo final
     char tar[255] = "tar cf ";
@@ -195,6 +205,8 @@ int main( int argc, char *argv[ ]){
     FIRST_PATH = &current;
     strcpy(current.dir, DIRECTORY_NAME);
     copy_files(DIRECTORY_NAME, files);
+    
+    
     /*
     int size = strlen(ZIP_NAME);  //Quantidade de caracteres arquivo 
     strcpy(TEMP_NAME, ZIP_NAME); // TEMP_NAME == ZIP_NAME
