@@ -15,39 +15,13 @@ pid_t p1;
 
 int p = 1;
 
-void remove_dirs(char *dirname)
-{
-    DIR *dir;
-    struct dirent *dirp;
-    dir = opendir(dirname);
-    chdir(dirname);
-    while ((dirp = readdir(dir)) != NULL)
-    {
-        if (dirp->d_type == 4)
-        {
-            if (strcmp(dirp->d_name, ".") == 0 || strcmp(dirp->d_name, "..") == 0)
-            {
-                continue;
-            }
-            remove_dirs(dirp->d_name);
-        }
-        else
-        {
-            remove(dirp->d_name);
-        }
-    }
-    chdir("..");
-    closedir(dir);
-    rmdir(dirname);
-}
-
 static int display_info(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf)
 {
     int size = strlen(DIRECTORY_NAME);
     char *to_create;
     char *new_path;
-    to_create = malloc(1000000);
-    new_path = malloc(1000000);
+    to_create = malloc(10000);
+    new_path = malloc(10000);
     strcpy(to_create, size + 1 + fpath);
     strcpy(new_path, TEMP_NAME);
     strcat(new_path, "/");
@@ -74,7 +48,7 @@ static int display_info(const char *fpath, const struct stat *sb, int tflag, str
         fclose(bziped);
         char bzip2[1000000];
 
-        if (p++ > 4)
+        if (p++ > 8)
         {
             wait(NULL);
             p--;
@@ -126,7 +100,7 @@ int main(int argc, char *argv[])
 
     nftw((argc < 3) ? "." : argv[1], display_info, 20, 0);
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 8; i++)
     {
         wait(NULL);
         p--;
@@ -141,7 +115,6 @@ int main(int argc, char *argv[])
     pclose(terminal);
 
     wait(NULL);
-    remove_dirs(TEMP_NAME);
     remove_files(TEMP_NAME);
 
     return 0;
